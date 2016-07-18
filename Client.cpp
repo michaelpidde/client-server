@@ -5,10 +5,13 @@ using namespace std;
 using namespace Network;
 
 int main() {
+	string url;
+	cout << "URL: ";
+	cin >> url;
 	SocketHandler socketHandler;
-	socketHandler.getAddressInfo();
+	socketHandler.getAddressInfo(url);
 	socketHandler.initSocket();
 	socketHandler.socketConnect();
-	socketHandler.getResponse();
+	socketHandler.getResponse(url);
 	return 0;
 }

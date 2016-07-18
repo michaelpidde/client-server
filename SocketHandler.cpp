@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -19,14 +20,14 @@ namespace Network {
 		return socketId;
 	}
 
-	void SocketHandler::getAddressInfo() {
+	void SocketHandler::getAddressInfo(string url) {
 		int status;
 		struct addrinfo hostData = {};
 
 		hostData.ai_family = AF_UNSPEC;
 		hostData.ai_socktype = SOCK_STREAM;
 
-		status = getaddrinfo("michaelpidde.com", "80", &hostData, &hostList);
+		status = getaddrinfo(url.c_str(), "80", &hostData, &hostList);
 
 		if(status != 0) {
 			cerr << "Error getting host info: " << gai_strerror(status) << endl;
@@ -53,11 +54,11 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::getResponse() {
+	void SocketHandler::getResponse(string url) {
 		cout << "Sending..." << endl;
-		const char *msg = "GET / HTTP/1.1\nhost: michaelpidde.com\n\n";
-		int len = strlen(msg);
-		ssize_t bytesSent = send(socketId, msg, len, 0);
+		string msg = "GET / HTTP/1.1\nhost: " + url + "\n\n";
+		int len = strlen(msg.c_str());
+		ssize_t bytesSent = send(socketId, msg.c_str(), len, 0);
 
 		cout << "Receiving message..." << endl;
 		char incomingBuffer[1000];
