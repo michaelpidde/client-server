@@ -6,9 +6,10 @@ using namespace Network;
 
 int main(int argc, char *argv[]) {
 	int port = 9090;
+	bool verbose = false;
 
 	// Check for p flag and see if a valid port number is supplied.
-	if(argc == 3) {
+	if(argc >= 3) {
 		if(strcmp(argv[1], "-p") == 0) {
 			int input = atoi(argv[2]);
 			if(input <= 1024 || input > 65535) {
@@ -20,7 +21,14 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	SocketHandler socketHandler;
+	// Verbose flag.
+	if(argc == 4) {
+		if(strcmp(argv[3], "-v") == 0) {
+			verbose = true;
+		}
+	}
+
+	SocketHandler socketHandler(verbose, port);
 	socketHandler.getAddressInfo(to_string(port).c_str());
 	socketHandler.initSocket();
 	socketHandler.bindSocket();
