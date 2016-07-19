@@ -1,8 +1,10 @@
 #include <iostream>
 #include <errno.h>
 #include <string>
+#include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <vector>
 #include <netdb.h>
 #include "SocketHandler.h"
 
@@ -123,20 +125,39 @@ namespace Network {
 	}
 
 	int SocketHandler::handleProcess(int newSocketId) {
-		// Do stuff here with connection...
 		if(verbose) {
-			cout << "Sending back default page..." << endl;
+			cout << "Receiving request data..." << endl;
 		}
-		string response = "HTTP/1.1 200 OK";
-		response += "\nContent-Type: text/html";
-		response += "\nConnection: Closed";
-		response += "\n\n";
-		response += "<!doctype html>\n";
-		response += "<html>\n<head>\n<title></title>\n</head>\n<body>\n";
-		response += "Server working.\n</body>\n</html>";
+		char buffer[2000];
+		// Clean out the memory.
+		memset(&buffer, 0, 2000);
+		recv(newSocketId, &buffer, 2000, 0);
+		if(verbose) {
+			cout << buffer << endl;
+		}
 
-		int len = strlen(response.c_str());
-		ssize_t sentBytes = send(newSocketId, response.c_str(), len, 0);
+		// Split headers at new line.
+		vector<string> headers;
+		string item;
+		stringstream ssin(buffer);
+		while(getline(ssin, item, '\n')) {
+			headers.push_back(item);
+		}
+
+
+		// if(verbose) {
+		// 	cout << "Sending back default page..." << endl;
+		// }
+		// string response = "HTTP/1.1 200 OK";
+		// response += "\nContent-Type: text/html";
+		// response += "\nConnection: Closed";
+		// response += "\n\n";
+		// response += "<!doctype html>\n";
+		// response += "<html>\n<head>\n<title></title>\n</head>\n<body>\n";
+		// response += "Server working.\n</body>\n</html>";
+
+		// int len = strlen(response.c_str());
+		// ssize_t sentBytes = send(newSocketId, response.c_str(), len, 0);
 		return 0;
 	}
 
