@@ -12,6 +12,6 @@ int main() {
 	socketHandler.getAddressInfo(url);
 	socketHandler.initSocket();
 	socketHandler.socketConnect();
-	socketHandler.getResponse(url);
+	socketHandler.getHttpResponse(url);
 	return 0;
 }

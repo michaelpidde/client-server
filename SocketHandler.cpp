@@ -1,7 +1,8 @@
 #include <iostream>
+#include <errno.h>
 #include <string>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netdb.h>
 #include "SocketHandler.h"
 
@@ -14,6 +15,7 @@ namespace Network {
 
 	SocketHandler::~SocketHandler() {
 		freeaddrinfo(hostList);
+		close(socketId);
 	}
 
 	int SocketHandler::getSocketId() {
@@ -21,13 +23,29 @@ namespace Network {
 	}
 
 	void SocketHandler::getAddressInfo(string url) {
-		int status;
 		struct addrinfo hostData = {};
 
 		hostData.ai_family = AF_UNSPEC;
 		hostData.ai_socktype = SOCK_STREAM;
 
-		status = getaddrinfo(url.c_str(), "80", &hostData, &hostList);
+		int status = getaddrinfo(url.c_str(), "80", &hostData, &hostList);
+
+		if(status != 0) {
+			cerr << "Error getting host info: " << gai_strerror(status) << endl;
+		} else {
+			cout << "Got address info. " << endl;
+		}
+	}
+
+	void SocketHandler::getAddressInfo(const char* port) {
+		struct addrinfo hostData;
+		memset(&hostData, 0, sizeof(struct addrinfo));
+
+		hostData.ai_family = AF_UNSPEC;
+		hostData.ai_flags = AI_PASSIVE;
+		hostData.ai_socktype = SOCK_STREAM;
+
+		int status = getaddrinfo(NULL, port, &hostData, &hostList);
 
 		if(status != 0) {
 			cerr << "Error getting host info: " << gai_strerror(status) << endl;
@@ -46,6 +64,62 @@ namespace Network {
 		}
 	}
 
+	void SocketHandler::bindSocket() {
+		cout << "Binding socket..." << endl;
+		// Check if port is in use first.
+		int reuse = 1;
+		int status = setsockopt(socketId, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
+		status = bind(socketId, hostList->ai_addr, hostList->ai_addrlen);
+
+		if(status == -1) {
+			char buffer[256];
+			int errorMessage = strerror_r(errno, buffer, 256);
+			cerr << "Error binding socket: " << buffer << endl;
+		}
+	}
+
+	void SocketHandler::socketListen(int backlog) {
+		cout << "Listening..." << endl;
+		int status = listen(socketId, backlog);
+		if(status == -1) {
+			cerr << "Error listening." << endl;
+		}
+
+		int newSocketId;
+		struct sockaddr_storage address;
+		socklen_t addressSize = sizeof(address);
+		newSocketId = accept(socketId, (struct sockaddr *)&address, &addressSize);
+		if(newSocketId == -1) {
+			cerr << "Error accepting." << endl;
+		} else {
+			socketId = newSocketId;
+		}
+
+		write();
+	}
+
+	int SocketHandler::write() {
+		// Do stuff here with connection...
+		cout << "Sending back default page..." << endl;
+		string response = "HTTP/1.1 200 OK";
+		response += "\nContent-Type: text/html";
+		response += "\nConnection: Closed";
+		response += "\n\n";
+		response += "<!doctype html>";
+		response += "<html><head><title></title></head><body>Server working.</body></html>";
+
+		int len = strlen(response.c_str());
+		ssize_t sentBytes = send(socketId, response.c_str(), len, 0);
+		return 0;
+	}
+
+
+	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 *
+	 * CLIENT FUNCTIONS
+	 *
+	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+	 */
 	void SocketHandler::socketConnect() {
 		cout << "Connecting to socket..." << endl;
 		int status = connect(socketId, hostList->ai_addr, hostList->ai_addrlen);
@@ -54,7 +128,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::getResponse(string url) {
+	void SocketHandler::getHttpResponse(string url) {
 		cout << "Sending..." << endl;
 		string msg = "GET / HTTP/1.1\nhost: " + url + "\n\n";
 		int len = strlen(msg.c_str());

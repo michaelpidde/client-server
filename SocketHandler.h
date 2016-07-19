@@ -6,11 +6,15 @@ namespace Network {
 		public:
 			SocketHandler();
 			~SocketHandler();
+			void getAddressInfo(const char* port);
 			void getAddressInfo(std::string url);
 			void initSocket();
-			int getSocketId();
+			void bindSocket();
 			void socketConnect();
-			void getResponse(std::string url);
+			void getHttpResponse(std::string url);
+			void socketListen(int backlog);
+			int write();
+			int getSocketId();
 		private:
 			int socketId;
 			addrinfo *hostList;
