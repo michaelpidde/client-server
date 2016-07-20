@@ -117,7 +117,6 @@ namespace Network {
 		if(start != std::string::npos) {
 			end = buffer.find('\n', start);
 			rc.referer = buffer.substr(start + needle.length(), end - start);
-			cout << rc.referer << endl;
 		}
 
 		return rc;
