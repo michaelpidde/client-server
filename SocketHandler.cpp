@@ -1,12 +1,11 @@
 #include <iostream>
 #include <errno.h>
 #include <string>
-#include <sstream>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <vector>
 #include <netdb.h>
 #include "SocketHandler.h"
+#include "RequestHandler.h"
 
 using namespace std;
 
@@ -136,28 +135,12 @@ namespace Network {
 			cout << buffer << endl;
 		}
 
-		// Split headers at new line.
-		vector<string> headers;
-		string item;
-		stringstream ssin(buffer);
-		while(getline(ssin, item, '\n')) {
-			headers.push_back(item);
-		}
+		RequestHandler rh;
+		string response = rh.handle((string)buffer);
 
+		int len = strlen(response.c_str());
+		ssize_t sentBytes = send(newSocketId, response.c_str(), len, 0);
 
-		// if(verbose) {
-		// 	cout << "Sending back default page..." << endl;
-		// }
-		// string response = "HTTP/1.1 200 OK";
-		// response += "\nContent-Type: text/html";
-		// response += "\nConnection: Closed";
-		// response += "\n\n";
-		// response += "<!doctype html>\n";
-		// response += "<html>\n<head>\n<title></title>\n</head>\n<body>\n";
-		// response += "Server working.\n</body>\n</html>";
-
-		// int len = strlen(response.c_str());
-		// ssize_t sentBytes = send(newSocketId, response.c_str(), len, 0);
 		return 0;
 	}
 
