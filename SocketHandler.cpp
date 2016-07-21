@@ -83,7 +83,7 @@ namespace Network {
 		// Check if port is in use first.
 		int reuse = 1;
 		int status = setsockopt(socketId, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
-		status = bind(socketId, hostList->ai_addr, hostList->ai_addrlen);
+		status = ::bind(socketId, hostList->ai_addr, hostList->ai_addrlen);
 
 		if(status == -1) {
 			char buffer[256];

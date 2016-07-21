@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <regex>
 #include <sys/stat.h>
 #include "RequestHandler.h"
 
@@ -22,7 +23,7 @@ namespace Network {
 		// Check for host configuration in server.
 		// (Well, sooner or later. Hard coded for now.)
 		struct knownHost {
-			string host = "localhost:8888";
+			string host = "192.168.0.5:8888";
 			string sysPath = "/var/www/testsite";
 		};
 		knownHost knownHost;
@@ -85,38 +86,31 @@ namespace Network {
 		string request = buffer.substr(0, lineBreak - 1);
 		rc.request = parseRequest(request);
 
-		// Second line is host (remove "Host: " and \n).
-		size_t secondBreak = buffer.find('\n', lineBreak);
-		rc.host = buffer.substr(lineBreak + 7, secondBreak - 1);
-
-		// Start finding things...
-		string needle = "Accept: ";
-		size_t start = buffer.find(needle);
-		size_t end;
-		if(start != std::string::npos) {
-			end = buffer.find('\n', start);
-			rc.accept = buffer.substr(start + needle.length(), end - start);
+		// Start grabbing particular headers.
+		regex regex("(Host: ([a-zA-Z0-9.:-]+))");
+		smatch match;
+		if(regex_search(buffer, match, regex)) {
+			rc.host = match[2];
 		}
 
-		needle = "Accept-Encoding: ";
-		start = buffer.find(needle);
-		if(start != std::string::npos) {
-			end = buffer.find('\n', start);
-			rc.encoding = buffer.substr(start + needle.length(), end - start);
+		regex = "(Accept: ([a-zA-Z0-9.:\\/,\\+;=\\* -_]+))";
+		if(regex_search(buffer, match, regex)) {
+			rc.accept = match[2];
 		}
 
-		needle = "User-Agent: ";
-		start = buffer.find(needle);
-		if(start != std::string::npos) {
-			end = buffer.find('\n', start);
-			rc.agent = buffer.substr(start + needle.length(), end - start);
+		regex = "(Accept-Encoding: ([a-zA-Z0-9.:\\/,\\+;=\\* -_]+))";
+		if(regex_search(buffer, match, regex)) {
+			rc.encoding = match[2];
 		}
 
-		needle = "Referer: ";
-		start = buffer.find(needle);
-		if(start != std::string::npos) {
-			end = buffer.find('\n', start);
-			rc.referer = buffer.substr(start + needle.length(), end - start);
+		regex = "(User-Agent: ([\\(a-zA-Z0-9.:\\/,\\+;=\\* -_\\)]+))";
+		if(regex_search(buffer, match, regex)) {
+			rc.agent = match[2];
+		}
+
+		regex = "(Referer: ([a-zA-Z0-9.:\\/,\\+= -_]+))";
+		if(regex_search(buffer, match, regex)) {
+			rc.referer = match[2];
 		}
 
 		return rc;

@@ -7,11 +7,11 @@ namespace Network {
 
 	struct requestContext {
 		request request;
-		std::string host;
-		std::string accept;
-		std::string encoding;
-		std::string agent;
-		std::string referer;
+		std::string host = "";
+		std::string accept = "";
+		std::string encoding = "";
+		std::string agent = "";
+		std::string referer = "";
 	};
 
 	class RequestHandler {
