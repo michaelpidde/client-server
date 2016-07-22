@@ -1,5 +1,5 @@
 #include <iostream>
-#include "SocketHandler.h"
+#include "Socket.h"
 
 using namespace std;
 using namespace Network;
@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	SocketHandler socketHandler(verbose, port);
-	socketHandler.getAddressInfo(to_string(port).c_str());
-	socketHandler.initSocket();
-	socketHandler.bindSocket();
-	socketHandler.socketListen(5);
+	Socket socket(verbose, port);
+	socket.getAddressInfo(to_string(port).c_str());
+	socket.initSocket();
+	socket.bindSocket();
+	socket.socketListen(5);
 }

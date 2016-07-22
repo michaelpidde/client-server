@@ -1,11 +1,11 @@
 #include <netdb.h>
 
 namespace Network {
-	class SocketHandler {
+	class Socket {
 		public:
-			SocketHandler();
-			SocketHandler(bool verbose, int port);
-			~SocketHandler();
+			Socket();
+			Socket(bool verbose, int port);
+			~Socket();
 			void getAddressInfo(const char* port);
 			void getAddressInfo(std::string url);
 			void initSocket();

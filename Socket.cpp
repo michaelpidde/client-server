@@ -4,17 +4,17 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
-#include "SocketHandler.h"
-#include "RequestHandler.h"
+#include "Socket.h"
+#include "Request.h"
 
 using namespace std;
 
 namespace Network {
-	SocketHandler::SocketHandler() {
+	Socket::Socket() {
 		socketId = 0;
 	}
 
-	SocketHandler::SocketHandler(bool verbose, int port) {
+	Socket::Socket(bool verbose, int port) {
 		socketId = 0;
 		this->verbose = verbose;
 		this->port = port;
@@ -22,12 +22,12 @@ namespace Network {
 		cout << "Press Ctrl + C to quit" << endl;
 	}
 
-	SocketHandler::~SocketHandler() {
+	Socket::~Socket() {
 		freeaddrinfo(hostList);
 		close(socketId);
 	}
 
-	void SocketHandler::getAddressInfo(string url) {
+	void Socket::getAddressInfo(string url) {
 		if(verbose) {
 			cout << "Getting address info. " << endl;
 		}
@@ -45,7 +45,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::getAddressInfo(const char* port) {
+	void Socket::getAddressInfo(const char* port) {
 		if(verbose) {
 			cout << "Getting address info. " << endl;
 		}
@@ -64,7 +64,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::initSocket() {
+	void Socket::initSocket() {
 		if(verbose) {
 			cout << "Creating socket..." << endl;
 		}
@@ -76,7 +76,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::bindSocket() {
+	void Socket::bindSocket() {
 		if(verbose) {
 			cout << "Binding socket..." << endl;
 		}
@@ -92,7 +92,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::socketListen(int backlog) {
+	void Socket::socketListen(int backlog) {
 		if(verbose) {
 			cout << "Listening..." << endl;
 		}
@@ -123,7 +123,7 @@ namespace Network {
 		}
 	}
 
-	int SocketHandler::handleProcess(int newSocketId) {
+	int Socket::handleProcess(int newSocketId) {
 		if(verbose) {
 			cout << "Receiving request data..." << endl;
 		}
@@ -135,7 +135,7 @@ namespace Network {
 			cout << buffer << endl;
 		}
 
-		RequestHandler rh;
+		Request rh;
 		string response = rh.handle((string)buffer);
 
 		int len = strlen(response.c_str());
@@ -151,7 +151,7 @@ namespace Network {
 	 *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	 */
-	void SocketHandler::socketConnect() {
+	void Socket::socketConnect() {
 		if(verbose) {
 			cout << "Connecting to socket..." << endl;
 		}
@@ -161,7 +161,7 @@ namespace Network {
 		}
 	}
 
-	void SocketHandler::getHttpResponse(string url) {
+	void Socket::getHttpResponse(string url) {
 		if(verbose) {
 			cout << "Sending..." << endl;
 		}

@@ -14,10 +14,10 @@ namespace Network {
 		std::string referer = "";
 	};
 
-	class RequestHandler {
+	class Request {
 		public:
-			RequestHandler();
-			~RequestHandler();
+			Request();
+			~Request();
 			std::string handle(std::string buffer);
 			requestContext parseHeaders(std::string buffer);
 			request parseRequest(std::string buffer);

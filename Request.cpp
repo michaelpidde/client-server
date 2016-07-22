@@ -3,16 +3,16 @@
 #include <sstream>
 #include <regex>
 #include <sys/stat.h>
-#include "RequestHandler.h"
+#include "Request.h"
 
 using namespace std;
 
 namespace Network {
-	RequestHandler::RequestHandler() {}
+	Request::Request() {}
 
-	RequestHandler::~RequestHandler() {}
+	Request::~Request() {}
 
-	string RequestHandler::handle(string buffer) {
+	string Request::handle(string buffer) {
 		requestContext rc = parseHeaders(buffer);
 
 		// Hard coding this for now though it'll have to be calculated later.
@@ -52,7 +52,7 @@ namespace Network {
 		return response;
 	}
 
-	request RequestHandler::parseRequest(string buffer) {
+	request Request::parseRequest(string buffer) {
 		request request;
 		size_t start;
 
@@ -78,7 +78,7 @@ namespace Network {
 		return request;
 	}
 
-	requestContext RequestHandler::parseHeaders(string buffer) {
+	requestContext Request::parseHeaders(string buffer) {
 		requestContext rc;
 
 		// First line is request itself (-1 to remove \n)
