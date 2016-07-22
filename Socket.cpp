@@ -136,51 +136,20 @@ namespace Network {
 		}
 
 		Request rh;
-		string response = rh.handle((string)buffer);
+		response response = rh.handle((string)buffer);
 
-		int len = strlen(response.c_str());
-		ssize_t sentBytes = send(newSocketId, response.c_str(), len, 0);
+		int len = strlen(response.headers.c_str());
+		ssize_t sentBytes = send(newSocketId, response.headers.c_str(), len, 0);
+
+		if(response.binary) {
+			len = response.body.size()*sizeof(int);
+			sentBytes = send(newSocketId, &response.body, len, 0);
+		} else {
+			string body(response.body.begin(), response.body.end());
+			len = body.length();
+			sentBytes = send(newSocketId, body.c_str(), len, 0);
+		}
 
 		return 0;
-	}
-
-
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 *
-	 * CLIENT FUNCTIONS
-	 *
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 */
-	void Socket::socketConnect() {
-		if(verbose) {
-			cout << "Connecting to socket..." << endl;
-		}
-		int status = connect(socketId, hostList->ai_addr, hostList->ai_addrlen);
-		if(status == -1) {
-			cerr << "Error connecting to socket." << endl;
-		}
-	}
-
-	void Socket::getHttpResponse(string url) {
-		if(verbose) {
-			cout << "Sending..." << endl;
-		}
-		string msg = "GET / HTTP/1.1\nhost: " + url + "\n\n";
-		int len = strlen(msg.c_str());
-		ssize_t bytesSent = send(socketId, msg.c_str(), len, 0);
-
-		if(verbose) {
-			cout << "Receiving message..." << endl;
-		}
-		char incomingBuffer[1000];
-		ssize_t bytesReceived = recv(socketId, incomingBuffer, 1000, 0);
-		if(bytesReceived == 0) {
-			cout << "Host shut connection." << endl;
-		} else if(bytesReceived == -1) {
-			cerr << "Error receiving response." << endl;
-		}
-
-		cout << bytesReceived << " bytes received." << endl;
-		cout << incomingBuffer << endl;
 	}
 }

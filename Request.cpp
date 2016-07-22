@@ -1,8 +1,8 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <regex>
+#include <vector>
 #include <sys/stat.h>
+#include "File.h"
 #include "Request.h"
 
 using namespace std;
@@ -12,13 +12,16 @@ namespace Network {
 
 	Request::~Request() {}
 
-	string Request::handle(string buffer) {
+	response Request::handle(string buffer) {
 		requestContext rc = parseHeaders(buffer);
+		response response;
 
 		// Hard coding this for now though it'll have to be calculated later.
-		string response = "HTTP/1.1 200 OK";
-		response += "\nContent-Type: text/html";
-		response += "\nConnection: Closed";
+		string staticHeader = "HTTP/1.1 200 OK";
+		staticHeader += "\nContent-Type: text/html";
+		staticHeader += "\nConnection: Closed";
+
+		string binHeader = "HTTP/1.1 200 OK";
 
 		// Check for host configuration in server.
 		// (Well, sooner or later. Hard coded for now.)
@@ -35,17 +38,39 @@ namespace Network {
 			// (Some of this can probably be moved to a Directory class later.)
 			struct stat check;
 			if(stat(knownHost.sysPath.c_str(), &check) == 0 && S_ISDIR(check.st_mode)) {
-				// If requested resource is a file, try to display it,
-				// otherwise display directory listing.
+				// Check if a resource is requested. If not, try default file.
+				// TODO: If neither of those work, display directory if configured to.
+				string location = knownHost.sysPath + "/";
+				bool returnBinary = false;
 				if(rc.request.resource.length() > 1) {
-					//
+					location += rc.request.resource;
+
+					// Get file extension and check against valid binary types
+					regex regex("[a-zA-Z]+$");
+					smatch match;
+					if(regex_search(rc.request.resource, match, regex)) {
+						if(find(begin(binTypes), end(binTypes), match[0]) != end(binTypes)) {
+							returnBinary = true;
+							binHeader += "\nContent-Type: image/" + (string)match[0];
+						}
+					}
 				} else {
-					// Try to display default file.
-					std::ifstream file (knownHost.sysPath + "/" + defaultFile);
-					std::stringstream fileBuffer;
-					fileBuffer << file.rdbuf();
-					response = fileBuffer.str();
+					location += defaultFile;
 				}
+
+				vector<char> contents = File::readStatic(location, returnBinary);
+				if(returnBinary) {
+					binHeader += "\nContent-Transfer-Encoding: binary";
+					binHeader += "\nContent-Length: " + to_string(contents.size()*sizeof(int));
+					binHeader += "\nConnection: Closed";
+					response.headers = binHeader + "\n\n";
+					response.binary = true;
+				} else {
+					response.headers = staticHeader + "\n\n";
+					response.binary = false;
+				}
+
+				response.body = contents;
 			}
 		}
 
