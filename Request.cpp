@@ -61,7 +61,7 @@ namespace Network {
 				vector<char> contents = File::readStatic(location, returnBinary);
 				if(returnBinary) {
 					binHeader += "\nContent-Transfer-Encoding: binary";
-					binHeader += "\nContent-Length: " + to_string(contents.size()*sizeof(int));
+					binHeader += "\nContent-Length: " + to_string(contents.size());
 					binHeader += "\nConnection: Closed";
 					response.headers = binHeader + "\n\n";
 					response.binary = true;

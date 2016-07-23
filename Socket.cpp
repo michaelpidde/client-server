@@ -142,8 +142,8 @@ namespace Network {
 		ssize_t sentBytes = send(newSocketId, response.headers.c_str(), len, 0);
 
 		if(response.binary) {
-			len = response.body.size()*sizeof(int);
-			sentBytes = send(newSocketId, &response.body, len, 0);
+			len = response.body.size();
+			sentBytes = send(newSocketId, response.body.data(), len, 0);
 		} else {
 			string body(response.body.begin(), response.body.end());
 			len = body.length();
