@@ -36,5 +36,6 @@ namespace Network {
 				"bmp",
 				"ico"
 			};
+			void error500(response &response);
 	};
 }

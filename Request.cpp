@@ -71,10 +71,26 @@ namespace Network {
 				}
 
 				response.body = contents;
+			} else {
+				// Configured host directory doesn't exist.
+				// TODO: Log this error.
+				error500(response);
 			}
+		} else {
+			// No known host defined.
+			// TODO: Log this error.
+			error500(response);
 		}
 
 		return response;
+	}
+
+	void Request::error500(response &response) {
+		string errorHeaders = "HTTP/1.1 500";
+		response.headers = errorHeaders + "\n\n";
+		response.binary = false;
+		string body = "Internal Server Error";
+		response.body = vector<char>(body.begin(), body.end());
 	}
 
 	request Request::parseRequest(string buffer) {

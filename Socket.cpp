@@ -127,6 +127,8 @@ namespace Network {
 		if(verbose) {
 			cout << "Receiving request data..." << endl;
 		}
+		// TODO: Clean this up since it's conceivable that a request could be
+		// larger than this character allotment.
 		char buffer[2000];
 		// Clean out the memory.
 		memset(&buffer, 0, 2000);
