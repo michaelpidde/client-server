@@ -26,7 +26,7 @@ namespace Network {
 		// Check for host configuration in server.
 		// (Well, sooner or later. Hard coded for now.)
 		struct knownHost {
-			string host = "192.168.0.5:8888";
+			string host = "localhost:8888";
 			string sysPath = "/var/www/testsite";
 		};
 		knownHost knownHost;
@@ -42,23 +42,35 @@ namespace Network {
 				// TODO: If neither of those work, display directory if configured to.
 				string location = knownHost.sysPath + "/";
 				bool returnBinary = false;
-				if(rc.request.resource.length() > 1) {
-					location += rc.request.resource;
+				string requestedFile;
 
-					// Get file extension and check against valid binary types
-					regex regex("[a-zA-Z]+$");
-					smatch match;
-					if(regex_search(rc.request.resource, match, regex)) {
-						if(find(begin(binTypes), end(binTypes), match[0]) != end(binTypes)) {
-							returnBinary = true;
-							binHeader += "\nContent-Type: image/" + (string)match[0];
-						}
-					}
+				if(rc.request.resource.length() > 1) {
+					requestedFile = rc.request.resource;
 				} else {
-					location += defaultFile;
+					requestedFile = defaultFile;
 				}
 
-				vector<char> contents = File::readStatic(location, returnBinary);
+				// Get file extension and check against valid binary types
+				regex regex("[a-zA-Z]+$");
+				smatch match;
+				if(regex_search(rc.request.resource, match, regex)) {
+					if(find(begin(binTypes), end(binTypes), match[0]) != end(binTypes)) {
+						returnBinary = true;
+						binHeader += "\nContent-Type: image/" + (string)match[0];
+					}
+				}
+
+				location += requestedFile;
+
+				vector<char> contents;
+				try {
+					contents = File::readStatic(location, returnBinary);
+				} catch(const char* e) {
+					// TODO: Log this error.
+					error404(response, requestedFile);
+					return response;
+				}
+
 				if(returnBinary) {
 					binHeader += "\nContent-Transfer-Encoding: binary";
 					binHeader += "\nContent-Length: " + to_string(contents.size());
@@ -75,22 +87,50 @@ namespace Network {
 				// Configured host directory doesn't exist.
 				// TODO: Log this error.
 				error500(response);
+				return response;
 			}
 		} else {
 			// No known host defined.
 			// TODO: Log this error.
 			error500(response);
+			return response;
 		}
 
 		return response;
 	}
 
+	void Request::error404(response &response, string &requestedFile) {
+		string errorHeaders = "HTTP/1.1 404 Not Found";
+		errorHeaders += "\nContent-Type: text/html";
+		response.binary = false;
+		string body = htmlTemplate(
+			"404 Not Found",
+			"Could not find requested file <b>" + requestedFile + "</b> on this server."
+		);
+		errorHeaders += "\nContent-Length: " + to_string(body.length());
+
+		response.headers = errorHeaders + "\n\n";
+		response.body = vector<char>(body.begin(), body.end());
+	}
+
 	void Request::error500(response &response) {
 		string errorHeaders = "HTTP/1.1 500";
-		response.headers = errorHeaders + "\n\n";
+		errorHeaders += "\nContent-Type: text/html";
 		response.binary = false;
-		string body = "Internal Server Error";
+		string body = htmlTemplate("Internal Server Error", "Internal Server Error");
+		errorHeaders += "\nContent-Length: " + to_string(body.length());
+
+		response.headers = errorHeaders + "\n\n";
 		response.body = vector<char>(body.begin(), body.end());
+	}
+
+	string Request::htmlTemplate(string title, string body) {
+		string html = "<doctype html>";
+		html += "\n<html>";
+		html += "\n<head><title>" + title + "</title></head>";
+		html += "\n<body>" + body + "</body>";
+		html += "\n</html>";
+		return html;
 	}
 
 	request Request::parseRequest(string buffer) {

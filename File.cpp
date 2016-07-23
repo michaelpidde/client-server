@@ -18,6 +18,11 @@ namespace Network {
 		} else {
 			inFile = ifstream(location);
 		}
+
+		if(!inFile.good()) {
+			throw "404";
+		}
+
 		std::vector<char> fileBuffer(
 			(istreambuf_iterator<char>(inFile)),
 			istreambuf_iterator<char>()

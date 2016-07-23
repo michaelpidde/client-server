@@ -36,6 +36,8 @@ namespace Network {
 				"bmp",
 				"ico"
 			};
+			std::string htmlTemplate(std::string title, std::string body);
+			void error404(response &response, std::string &requestedFile);
 			void error500(response &response);
 	};
 }
