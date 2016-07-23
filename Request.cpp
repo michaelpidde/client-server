@@ -1,7 +1,7 @@
 #include <iostream>
-#include <regex>
+#include <string>
 #include <vector>
-#include <sys/stat.h>
+#include "Config.h"
 #include "File.h"
 #include "Request.h"
 
@@ -12,94 +12,99 @@ namespace Network {
 
 	Request::~Request() {}
 
-	response Request::handle(string buffer) {
+	Request::response Request::handle(string buffer) {
 		requestContext rc = parseHeaders(buffer);
 		response response;
-
-		// Hard coding this for now though it'll have to be calculated later.
-		string staticHeader = "HTTP/1.1 200 OK";
-		staticHeader += "\nContent-Type: text/html";
-		staticHeader += "\nConnection: Closed";
-
-		string binHeader = "HTTP/1.1 200 OK";
-
-		// Check for host configuration in server.
-		// (Well, sooner or later. Hard coded for now.)
-		struct knownHost {
-			string host = "localhost:8888";
-			string sysPath = "/var/www/testsite";
-		};
 		knownHost knownHost;
-
-		string defaultFile = "index.htm";
-
-		if(rc.host.compare(knownHost.host) == 0) {
-			// Read from configured sysPath
-			// (Some of this can probably be moved to a Directory class later.)
-			struct stat check;
-			if(stat(knownHost.sysPath.c_str(), &check) == 0 && S_ISDIR(check.st_mode)) {
-				// Check if a resource is requested. If not, try default file.
-				// TODO: If neither of those work, display directory if configured to.
-				string location = knownHost.sysPath + "/";
-				bool returnBinary = false;
-				string requestedFile;
-
-				if(rc.request.resource.length() > 1) {
-					requestedFile = rc.request.resource;
-				} else {
-					requestedFile = defaultFile;
-				}
-
-				// Get file extension and check against valid binary types
-				regex regex("[a-zA-Z]+$");
-				smatch match;
-				if(regex_search(rc.request.resource, match, regex)) {
-					if(find(begin(binTypes), end(binTypes), match[0]) != end(binTypes)) {
-						returnBinary = true;
-						binHeader += "\nContent-Type: image/" + (string)match[0];
-					}
-				}
-
-				location += requestedFile;
-
-				vector<char> contents;
-				try {
-					contents = File::readStatic(location, returnBinary);
-				} catch(const char* e) {
-					// TODO: Log this error.
-					error404(response, requestedFile);
-					return response;
-				}
-
-				if(returnBinary) {
-					binHeader += "\nContent-Transfer-Encoding: binary";
-					binHeader += "\nContent-Length: " + to_string(contents.size());
-					binHeader += "\nConnection: Closed";
-					response.headers = binHeader + "\n\n";
-					response.binary = true;
-				} else {
-					response.headers = staticHeader + "\n\n";
-					response.binary = false;
-				}
-
-				response.body = contents;
-			} else {
-				// Configured host directory doesn't exist.
-				// TODO: Log this error.
-				error500(response);
-				return response;
-			}
-		} else {
-			// No known host defined.
+		try {
+			knownHost = getKnownHost(rc.host);
+		} catch(const char* e) {
 			// TODO: Log this error.
-			error500(response);
+			status500(response);
 			return response;
 		}
 
+		// TODO: Make this configurable.
+		string defaultFile = "index.htm";
+
+		// Check configured host directory
+		if(!Config::isValidDirectory(knownHost.sysPath)) {
+			// TODO: Log this error.
+			status500(response);
+			return response;
+		}
+
+		// Check if a resource is requested. If not, try default file.
+		// TODO: If neither of those work, display directory if configured to.
+		string location = knownHost.sysPath + "/";
+		bool returnBinary = false;
+		string requestedFile;
+
+		if(rc.request.resource.length() > 1) {
+			requestedFile = rc.request.resource;
+		} else {
+			requestedFile = defaultFile;
+		}
+
+		// Get file extension and check against valid binary types
+		string ext = File::getFileExtension(requestedFile);
+		if(find(begin(binTypes), end(binTypes), ext) != end(binTypes)) {
+			returnBinary = true;
+		}
+
+		location += requestedFile;
+
+		// Read requested file contents from file system.
+		vector<char> contents;
+		try {
+			contents = File::readStatic(location, returnBinary);
+		} catch(const char* e) {
+			// TODO: Log this error.
+			status404(response, requestedFile);
+			return response;
+		}
+		response.body = contents;
+
+		// If we got here, everything's good, so send a 200.
+		status200(response, returnBinary, ext);
 		return response;
 	}
 
-	void Request::error404(response &response, string &requestedFile) {
+	knownHost Request::getKnownHost(string host) {
+		// Check for host configuration in server.
+		// (Well, sooner or later. Hard coded for now.)
+		knownHost knownHost;
+		knownHost.host = "localhost:8888";
+		knownHost.sysPath = "/var/www/testsite";
+
+		if(host.compare(knownHost.host) == 0) {
+			return knownHost;
+		} else {
+			throw "500";
+		}
+	}
+
+	void Request::status200(response &response, bool binary, string ext) {
+		string headers = "HTTP/1.1 200 OK";
+
+		if(binary) {
+			response.binary = true;
+			headers += "\nContent-Type: image/" + ext;
+			headers += "\nContent-Transfer-Encoding: binary";
+		} else {
+			response.binary = false;
+			if(ext.length()) {
+				headers += "\nContent-Type: text/" + (ext == "htm"? "html" : ext);
+			}
+		}
+
+		headers += "\nContent-Length: " + to_string(response.body.size());
+		headers += "\nConnection: Closed";
+		headers += "\n\n";
+		response.headers = headers;
+	}
+
+	void Request::status404(response &response, string &requestedFile) {
 		string errorHeaders = "HTTP/1.1 404 Not Found";
 		errorHeaders += "\nContent-Type: text/html";
 		response.binary = false;
@@ -113,7 +118,7 @@ namespace Network {
 		response.body = vector<char>(body.begin(), body.end());
 	}
 
-	void Request::error500(response &response) {
+	void Request::status500(response &response) {
 		string errorHeaders = "HTTP/1.1 500";
 		errorHeaders += "\nContent-Type: text/html";
 		response.binary = false;
@@ -133,7 +138,7 @@ namespace Network {
 		return html;
 	}
 
-	request Request::parseRequest(string buffer) {
+	Request::request Request::parseRequest(string buffer) {
 		request request;
 		size_t start;
 
@@ -159,7 +164,7 @@ namespace Network {
 		return request;
 	}
 
-	requestContext Request::parseHeaders(string buffer) {
+	Request::requestContext Request::parseHeaders(string buffer) {
 		requestContext rc;
 
 		// First line is request itself (-1 to remove \n)

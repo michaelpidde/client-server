@@ -138,7 +138,7 @@ namespace Network {
 		}
 
 		Request rh;
-		response response = rh.handle((string)buffer);
+		Request::response response = rh.handle((string)buffer);
 
 		int len = strlen(response.headers.c_str());
 		ssize_t sentBytes = send(newSocketId, response.headers.c_str(), len, 0);

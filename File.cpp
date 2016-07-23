@@ -1,4 +1,6 @@
+#include <iostream>
 #include <fstream>
+#include <string>
 #include <sstream>
 #include <iterator>
 #include <vector>
@@ -11,7 +13,7 @@ namespace Network {
 
 	File::~File() {}
 
-	std::vector<char> File::readStatic(string location, bool binary) {
+	vector<char> File::readStatic(string location, bool binary) {
 		ifstream inFile;
 		if(binary) {
 			inFile = ifstream(location, ios::binary);
@@ -23,10 +25,21 @@ namespace Network {
 			throw "404";
 		}
 
-		std::vector<char> fileBuffer(
+		vector<char> fileBuffer(
 			(istreambuf_iterator<char>(inFile)),
 			istreambuf_iterator<char>()
 		);
 		return fileBuffer;
+	}
+
+	string File::getFileExtension(string file) {
+		regex regex("\\.([a-zA-Z]+)$");
+		smatch match;
+		string ext = "";
+		if(regex_search(file, match, regex)) {
+			ext = match[1];
+		}
+		cout << ext << endl;
+		return ext;
 	}
 }
