@@ -1,3 +1,4 @@
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,7 +20,7 @@ namespace Network {
 		try {
 			knownHost = getKnownHost(rc.host);
 		} catch(const char* e) {
-			// TODO: Log this error.
+			logError("Could not find host '" + rc.host + "' in configured hosts.");
 			status500(response);
 			return response;
 		}
@@ -28,8 +29,8 @@ namespace Network {
 		string defaultFile = "index.htm";
 
 		// Check configured host directory
-		if(!Config::isValidDirectory(knownHost.sysPath)) {
-			// TODO: Log this error.
+		if(!File::isValidDirectory(knownHost.sysPath)) {
+			logError("Configured host directory '" + knownHost.sysPath + "' is not valid.");
 			status500(response);
 			return response;
 		}
@@ -136,6 +137,16 @@ namespace Network {
 		html += "\n<body>" + body + "</body>";
 		html += "\n</html>";
 		return html;
+	}
+
+	void Request::logError(string line) {
+		// Get current time and remove trailing \n
+		time_t now = time(nullptr);
+		string formattedTime = asctime(localtime(&now));
+		formattedTime.pop_back();
+
+		// TODO: Init log directory on startup. Add log path to config.
+		File::writeLine("bin/error.log", "[" + formattedTime + "] " + line);
 	}
 
 	Request::request Request::parseRequest(string buffer) {

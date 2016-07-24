@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iterator>
 #include <vector>
+#include <sys/stat.h>
 #include "File.h"
 
 using namespace std;
@@ -39,7 +40,23 @@ namespace Network {
 		if(regex_search(file, match, regex)) {
 			ext = match[1];
 		}
-		cout << ext << endl;
 		return ext;
+	}
+
+	bool File::isValidDirectory(string directory) {
+		struct stat check;
+		if(stat(directory.c_str(), &check) == 0 && S_ISDIR(check.st_mode)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	void File::writeLine(string path, string line) {
+		ofstream outfile(path, ios::out | ios::app);
+		if(outfile.good()) {
+			outfile << line + "\n";
+		}
+		outfile.close();
 	}
 }

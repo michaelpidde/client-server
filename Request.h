@@ -1,3 +1,6 @@
+#ifndef _REQUEST_H_
+#define _REQUEST_H_
+
 #include <vector>
 #include "knownhost.h"
 
@@ -33,13 +36,17 @@ namespace Network {
 				"bmp",
 				"ico"
 			};
-			knownHost getKnownHost(std::string host);
 			response handle(std::string buffer);
+		private:
+			knownHost getKnownHost(std::string host);
 			requestContext parseHeaders(std::string buffer);
 			request parseRequest(std::string buffer);
 			std::string htmlTemplate(std::string title, std::string body);
+			void logError(std::string line);
 			void status200(response &response, bool binary, std::string extension);
 			void status404(response &response, std::string &requestedFile);
 			void status500(response &response);
 	};
 }
+
+#endif /*_REQUEST_H_*/

@@ -1,3 +1,6 @@
+#ifndef _SOCKET_H_
+#define _SOCKET_H_
+
 #include <netdb.h>
 
 namespace Network {
@@ -20,3 +23,5 @@ namespace Network {
 			addrinfo *hostList;
 	};
 }
+
+#endif /*_SOCKET_H_*/

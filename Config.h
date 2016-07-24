@@ -1,10 +1,12 @@
-#include "knownhost.h"
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 namespace Network {
 	class Config {
 		public:
 			Config();
 			~Config();
-			static bool isValidDirectory(std::string directory);
 	};
 }
+
+#endif /*_CONFIG_H_*/
