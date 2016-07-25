@@ -1,7 +1,7 @@
-#include <ctime>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <syslog.h>
 #include "Config.h"
 #include "File.h"
 #include "Request.h"
@@ -140,13 +140,9 @@ namespace Network {
 	}
 
 	void Request::logError(string line) {
-		// Get current time and remove trailing \n
-		time_t now = time(nullptr);
-		string formattedTime = asctime(localtime(&now));
-		formattedTime.pop_back();
-
-		// TODO: Init log directory on startup. Add log path to config.
-		File::writeLine("bin/error.log", "[" + formattedTime + "] " + line);
+		openlog("nginept", LOG_PID|LOG_CONS, LOG_DAEMON);
+		syslog(LOG_ERR, line.c_str());
+		closelog();
 	}
 
 	Request::request Request::parseRequest(string buffer) {
