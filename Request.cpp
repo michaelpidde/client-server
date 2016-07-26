@@ -14,9 +14,20 @@ namespace Network {
 	Request::~Request() {}
 
 	Request::response Request::handle(string buffer) {
-		requestContext rc = parseHeaders(buffer);
 		response response;
 		knownHost knownHost;
+		requestContext rc;
+
+		try {
+			rc = parseHeaders(buffer);
+		} catch(const char* e) {
+			// Cast to string to use more easily.
+			string method(e);
+			logError("Unimplemented HTTP method '" + method + "'");
+			status405(response, method);
+			return response;
+		}
+
 		try {
 			knownHost = getKnownHost(rc.host);
 		} catch(const char* e) {
@@ -119,6 +130,20 @@ namespace Network {
 		response.body = vector<char>(body.begin(), body.end());
 	}
 
+	void Request::status405(response &response, string &method) {
+		string errorHeaders = "HTTP/1.1 405 Method Not Allowed";
+		errorHeaders += "\nContent-Type: text/html";
+		response.binary = false;
+		string body = htmlTemplate(
+			"405 Method Not Allowed",
+			"Request method '" + method + "' not allowed."
+		);
+		errorHeaders += "\nContent-Length: " + to_string(body.length());
+
+		response.headers = errorHeaders + "\n\n";
+		response.body = vector<char>(body.begin(), body.end());
+	}
+
 	void Request::status500(response &response) {
 		string errorHeaders = "HTTP/1.1 500";
 		errorHeaders += "\nContent-Type: text/html";
@@ -154,8 +179,10 @@ namespace Network {
 		string method = buffer.substr(0, end);
 		if(strcmp(method.c_str(), "POST") == 0) {
 			request.method = "POST";
-		} else {
+		} else if(strcmp(method.c_str(), "GET") == 0) {
 			request.method = "GET";
+		} else {
+			throw method.c_str();
 		}
 
 		// Get resource (request path) (minus \n)
@@ -177,7 +204,11 @@ namespace Network {
 		// First line is request itself (-1 to remove \n)
 		size_t lineBreak = buffer.find('\n');
 		string request = buffer.substr(0, lineBreak - 1);
-		rc.request = parseRequest(request);
+		try {
+			rc.request = parseRequest(request);
+		} catch(const char* e) {
+			throw e;
+		}
 
 		// Start grabbing particular headers.
 		regex regex("(Host: ([a-zA-Z0-9.:-]+))");

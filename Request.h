@@ -45,6 +45,7 @@ namespace Network {
 			void logError(std::string line);
 			void status200(response &response, bool binary, std::string extension);
 			void status404(response &response, std::string &requestedFile);
+			void status405(response &response, std::string &method);
 			void status500(response &response);
 	};
 }
