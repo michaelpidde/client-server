@@ -1,10 +1,13 @@
 #include <iostream>
 #include "Socket.h"
+#include "Config.h"
 
 using namespace std;
 using namespace Network;
 
 int main(int argc, char *argv[]) {
+	Config config;
+
 	int port = 9090;
 	bool verbose = false;
 
