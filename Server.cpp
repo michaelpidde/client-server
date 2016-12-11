@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include "Socket.h"
 
 using namespace std;
