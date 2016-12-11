@@ -1,6 +1,7 @@
 #include <iostream>
 #include <errno.h>
 #include <string>
+#include <cstring>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -87,7 +88,15 @@ namespace Network {
 
 		if(status == -1) {
 			char buffer[256];
-			int errorMessage = strerror_r(errno, buffer, 256);
+			/*
+			 * Note here for future reference because this was a really weird thing:
+			 * If you look at the man pages for strerror_r, there are apparently
+			 * two versions, the XSI-compliant, and the GNU-compliant ones. One returns
+			 * an int, the other a char*. So, if I want to be able to compile on both
+			 * OSX and Linux, we need to just use the auto type because the type will
+			 * be different on either system by default. Fun.
+			 */
+			auto errorMessage = strerror_r(errno, buffer, 256);
 			cerr << "Error binding socket: " << buffer << endl;
 		}
 	}
