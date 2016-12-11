@@ -15,12 +15,10 @@ namespace Network {
 	File::~File() {}
 
 	vector<char> File::readStatic(string location, bool binary) {
-		ifstream inFile;
+		ifstream inFile(location);
 
 		if(binary) {
 			ifstream inFile(location, ios::binary);
-		} else {
-			ifstream inFile(location);
 		}
 
 		if(!inFile.good()) {
