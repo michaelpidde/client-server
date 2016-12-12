@@ -2,12 +2,13 @@
 #define _REQUEST_H_
 
 #include <vector>
+#include "Config.h"
 #include "knownhost.h"
 
 namespace Network {
 	class Request {
 		public:
-			Request();
+			Request(Config &config);
 			~Request();
 			struct request {
 				std::string method;
@@ -38,6 +39,7 @@ namespace Network {
 			};
 			response handle(std::string buffer);
 		private:
+			Config *config;
 			knownHost getKnownHost(std::string host);
 			requestContext parseHeaders(std::string buffer);
 			request parseRequest(std::string buffer);

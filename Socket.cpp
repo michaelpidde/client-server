@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
+#include "Config.h"
 #include "Socket.h"
 #include "Request.h"
 
@@ -15,10 +16,11 @@ namespace Network {
 		socketId = 0;
 	}
 
-	Socket::Socket(bool verbose, int port) {
+	Socket::Socket(bool verbose, int port, Config &config) {
 		socketId = 0;
 		this->verbose = verbose;
 		this->port = port;
+		this->config = &config;
 		cout << "Server running on port " << to_string(port) << endl;
 		cout << "Press Ctrl + C to quit" << endl;
 	}
@@ -146,7 +148,7 @@ namespace Network {
 			cout << buffer << endl;
 		}
 
-		Request rh;
+		Request rh(*this->config);
 		Request::response response = rh.handle((string)buffer);
 
 		int len = strlen(response.headers.c_str());

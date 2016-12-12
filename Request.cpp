@@ -9,7 +9,9 @@
 using namespace std;
 
 namespace Network {
-	Request::Request() {}
+	Request::Request(Config &config) {
+		this->config = &config;
+	}
 
 	Request::~Request() {}
 
@@ -36,8 +38,7 @@ namespace Network {
 			return response;
 		}
 
-		// TODO: Make this configurable.
-		string defaultFile = "index.htm";
+		string defaultFile = this->config->getDefaultFile();
 
 		// Check configured host directory
 		if(!File::isValidDirectory(knownHost.sysPath)) {
@@ -83,11 +84,7 @@ namespace Network {
 	}
 
 	knownHost Request::getKnownHost(string host) {
-		// Check for host configuration in server.
-		// (Well, sooner or later. Hard coded for now.)
-		knownHost knownHost;
-		knownHost.host = "localhost:8888";
-		knownHost.sysPath = "/var/www/testsite";
+		knownHost knownHost = this->config->getHost();
 
 		if(host.compare(knownHost.host) == 0) {
 			return knownHost;

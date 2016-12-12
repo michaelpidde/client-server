@@ -11,11 +11,11 @@ namespace Network {
 			~Config();
 			std::string getDefaultFile();
 			std::string getLogPath();
-			std::vector<knownHost> getHosts();
+			knownHost getHost();
 		private:
 			std::string defaultFile;
 			std::string logPath;
-			std::vector<knownHost> hosts;
+			knownHost host;
 			void readDefault();
 	};
 }

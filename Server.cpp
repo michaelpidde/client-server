@@ -1,14 +1,13 @@
 #include <iostream>
 #include <cstring>
-#include "Socket.h"
 #include "Config.h"
+#include "Socket.h"
 
 using namespace std;
 using namespace Network;
 
 int main(int argc, char *argv[]) {
 	Config config;
-
 	int port = 9090;
 	bool verbose = false;
 
@@ -32,7 +31,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	Socket socket(verbose, port);
+	Socket socket(verbose, port, config);
 	socket.getAddressInfo(to_string(port).c_str());
 	socket.initSocket();
 	socket.bindSocket();
