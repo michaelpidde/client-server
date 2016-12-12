@@ -12,11 +12,13 @@ namespace Network {
 			std::string getDefaultFile();
 			std::string getLogPath();
 			knownHost getHost();
+			static std::string pathFormat(std::string &path);
 		private:
 			std::string defaultFile;
 			std::string logPath;
 			knownHost host;
 			void readDefault();
+
 	};
 }
 

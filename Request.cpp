@@ -1,4 +1,7 @@
 #include <iostream>
+#include <chrono>
+#include <ctime>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <syslog.h>
@@ -41,15 +44,16 @@ namespace Network {
 		string defaultFile = this->config->getDefaultFile();
 
 		// Check configured host directory
-		if(!File::isValidDirectory(knownHost.sysPath)) {
-			logError("Configured host directory '" + knownHost.sysPath + "' is not valid.");
+		string sysPath = Config::pathFormat(knownHost.sysPath);
+		if(!File::isValidDirectory(sysPath)) {
+			logError("Configured host directory '" + sysPath + "' is not valid.");
 			status500(response);
 			return response;
 		}
 
 		// Check if a resource is requested. If not, try default file.
 		// TODO: If neither of those work, display directory if configured to.
-		string location = knownHost.sysPath + "/";
+		string location = sysPath;
 		bool returnBinary = false;
 		string requestedFile;
 
@@ -168,6 +172,34 @@ namespace Network {
 		closelog();
 	}
 
+	void Request::log(string line) {
+		ofstream outFile(this->config->getLogPath() + "request.log", ofstream::out | ofstream::app);
+		if(outFile.good()) {
+			outFile.write(line.c_str(), line.length());
+			outFile.close();
+		}
+	}
+
+	string Request::rcToString(requestContext &rc) {
+		string out = "";
+
+		chrono::time_point<chrono::system_clock> now;
+		now = chrono::system_clock::now();
+		time_t requestTime = chrono::system_clock::to_time_t(now);
+
+		out += ctime(&requestTime);
+		out += "Resource: " + rc.request.resource + "\n";
+		out += "Method: " + rc.request.method + "\n";
+		out += "HTTP: " + rc.request.httpVersion + "\n";
+		out += "Host: " + rc.host + "\n";
+		out += "Accept: " + rc.accept + "\n";
+		out += "Encoding: " + rc.encoding + "\n";
+		out += "Agent: " + rc.agent + "\n";
+		out += "Referer: " + rc.referer + "\n";
+		out += "\n";
+		return out;
+	}
+
 	Request::request Request::parseRequest(string buffer) {
 		request request;
 		size_t start;
@@ -234,6 +266,8 @@ namespace Network {
 		if(regex_search(buffer, match, regex)) {
 			rc.referer = match[2];
 		}
+
+		log(rcToString(rc));
 
 		return rc;
 	}

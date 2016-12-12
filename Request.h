@@ -45,6 +45,8 @@ namespace Network {
 			request parseRequest(std::string buffer);
 			std::string htmlTemplate(std::string title, std::string body);
 			void logError(std::string line);
+			void log(std::string line);
+			std::string rcToString(requestContext &rc);
 			void status200(response &response, bool binary, std::string extension);
 			void status404(response &response, std::string &requestedFile);
 			void status405(response &response, std::string &method);

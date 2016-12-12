@@ -53,11 +53,24 @@ namespace Network {
 		}
 	}
 
+	string Config::pathFormat(string &path) {
+		char c = path.back();
+		if(c == '/') {
+			return path;
+		} else {
+			return path + "/";
+		}
+	}
+
 	knownHost Config::getHost() {
 		return this->host;
 	}
 
 	string Config::getDefaultFile() {
 		return this->defaultFile;
+	}
+
+	string Config::getLogPath() {
+		return pathFormat(this->logPath);
 	}
 }
