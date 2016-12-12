@@ -89,6 +89,7 @@ namespace Network {
 		if(host.compare(knownHost.host) == 0) {
 			return knownHost;
 		} else {
+			logError("Could not find host " + host + " in configuration.");
 			throw "500";
 		}
 	}
